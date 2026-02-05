@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_home"
+        android:title="Туры" />
+
+    <item
+        android:id="@+id/nav_bookings"
+        android:icon="@drawable/ic_menu"
+        android:title="Брони" />
+
+    <item
+        android:id="@+id/nav_favorites"
+        android:icon="@drawable/ic_favorities"
+        android:title="Избранное" />
+
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_profile"
+        android:title="Профиль" />
+
+    <!-- Админские пункты -->
+    <item
+        android:id="@+id/nav_admin_tours"
+        android:icon="@drawable/ic_manage"
+        android:title="Управление" />
+
+    <item
+        android:id="@+id/nav_admin_bookings"
+        android:icon="@drawable/ic_confrim"
+        android:title="Подтверждение" />
+
+</menu>
