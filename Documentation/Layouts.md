@@ -15,10 +15,10 @@
 </div>
 
 ## Окно «Детали тура»
-При нажатии на карточку тура в главном окне (рисунок 1) или в окне «Избранное» (рисунок 5) открывается окно деталей тура (рисунок 3). В данном окне tour_detail_image загружает изображение из базы данных, tour_detail_title отображает название тура, tour_detail_country - страну, tour_detail_price - цену, а TextView2 выводит надпись «Участники».
-В поле book_button можно ввести количество участников тура. При нажатии на book_button тур бронируется, а кнопка back_button возвращает пользователя на предыдущий экран.
+При нажатии на карточку тура в главном окне (рисунок 1) или в окне «Избранное» (рисунок 5) открывается окно деталей тура (рисунок 3). В данном окне tour_detail_image загружает изображение из базы данных, tour_detail_title отображает название тура, tour_detail_country - страну, tour_detail_price - цену, а TextView2 выводит надпись «Участники». В DateTextView выводится даты тура.
+В поле participants_input можно ввести количество участников тура. При нажатии на book_button тур бронируется, с помощью кнопки select_dates_button можно выбрать даты тура, а кнопка back_button возвращает пользователя на предыдущий экран. 
 <div align="center">
-<img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/600c8bab-5ca6-44f1-b907-b873c015517c" />
+<img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/5bfe1d6e-7409-499f-96ba-48154794c9f0" />
 
 Рисунок 3 - Детали тура
 </div>
@@ -78,22 +78,24 @@
 
 ## Окно «Добавление тура»
 
-В окне добавление тура (рисунок 10) необходимо заполнить поля добавления тура. В поле title_input вводится название тура, в description_input - описание тура, в country_input - страна, в поле price_input - цена. Для загрузки изображения необходимо ввести ссылку на изображение в поле image_url_input.
+В окне добавление тура (рисунок 10) необходимо заполнить поля добавления тура. В поле title_input вводится название тура, в description_input - описание тура, в from_country_input - из какой страны, в поле to_country_input - в какую страну, в поле total_places_input - количество мест, в поле price_input - цена. Для загрузки изображения необходимо ввести ссылку на изображение в поле image_url_input.
+Кнопка select_start_date_button устанавливает даты начала тура.
+Кнопка select_end_date_button устанавливает дату окончания тура.
 Кнопка save_button сохраняет и добавляет тур, а cancel_button отменяет добавление тура.
 <div align="center">
-<img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/99fc5b83-1a3a-4b93-936f-7eda8ff9302e" />
+<img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/19aebbd5-65c5-4173-be16-745ca64904d7" />
   
 Рисунок 10 - Окно добавление тура
 </div>
 
-## Окно «Подтверждения»
+## Окно «Отмена бронированый»
 
-В окне «Подтверждение бронирования» (рисунок 11) admin_bookings_recycler загружает список запросов на туры. Туры в списке отображаются в виде карточек подтверждения (рисунок 12).
-В макете карточки подтверждения booking_info отображает название тура, booking_status — статус тура, а booking_participants — количество участников. При нажатии на кнопку confirm_button тур подтверждается, а при нажатии на кнопку cancel_button — отклоняется. После подтверждения с помощью кнопки cancel_button можно отменить тур.
+В окне «Отмена бронированый» (рисунок 11) admin_bookings_recycler загружает список запросов на туры. Туры в списке отображаются в виде карточек подтверждения (рисунок 12).
+В макете карточки подтверждения booking_info отображает название тура, booking_status — статус тура, а booking_participants — количество участников. При нажатии на кнопку cancel_button — отменяется.
 <div align="center">
 <img width="300" height="600" alt="image" src="https://github.com/user-attachments/assets/c3e1bc0c-5eb6-4b3b-91c1-ebaf9e0666b9" />
   
-Рисунок 11 - Окно подтверждения
+Рисунок 11 - Окно Отмена бронированый
 
 <img width="600" height="300" alt="image" src="https://github.com/user-attachments/assets/d5784d1f-1f31-4d40-9249-2c6ffda59b46" />
 
