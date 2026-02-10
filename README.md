@@ -12,7 +12,7 @@
 
 ### Интерфейс и Функционал
 * **[Функциональные требования](Documentation/Functional_requirements.md)**.
-* **[Нефункциональные требования](Documentation/Non-functional_requirements.md)**
+* **[Нефункциональные требования](Documentation/Non_functional_requirements.md)**
 * **[Описание макетов](Documentation/Layouts.md)** 
 
 ### Тестирование
