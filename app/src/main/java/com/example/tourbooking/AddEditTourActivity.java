@@ -1,15 +1,18 @@
 package com.example.tourbooking;
 
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.firebase.firestore.FirebaseFirestore;
-
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class AddEditTourActivity extends AppCompatActivity {
@@ -18,7 +21,12 @@ public class AddEditTourActivity extends AppCompatActivity {
             priceInput, imageUrlInput, totalPlacesInput;
     private Button saveButton, cancelButton;
     private FirebaseFirestore db;
-    private String tourId; // Если редактирование
+    private String tourId;
+    private Button selectStartDateBtn, selectEndDateBtn;
+    private TextView startDateText, endDateText;
+    private long startDate = 0;
+    private long endDate = 0;
+    private int duration = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +43,15 @@ public class AddEditTourActivity extends AppCompatActivity {
         imageUrlInput = findViewById(R.id.image_url_input);
         saveButton = findViewById(R.id.save_button);
         cancelButton = findViewById(R.id.cancel_button);
+        selectStartDateBtn = findViewById(R.id.select_start_date_button);
+        selectEndDateBtn = findViewById(R.id.select_end_date_button);
+        startDateText = findViewById(R.id.start_date_text);
+        endDateText = findViewById(R.id.end_date_text);
 
         db = FirebaseFirestore.getInstance();
+
+        // Настройка DatePicker
+        setupDatePickers();
 
         // Проверяем, редактируем ли существующий тур
         tourId = getIntent().getStringExtra("tourId");
@@ -47,6 +62,68 @@ public class AddEditTourActivity extends AppCompatActivity {
 
         saveButton.setOnClickListener(v -> saveTour());
         cancelButton.setOnClickListener(v -> finish());
+    }
+    private void setupDatePickers() {
+        selectStartDateBtn.setOnClickListener(v -> showDatePicker(true));
+        selectEndDateBtn.setOnClickListener(v -> showDatePicker(false));
+    }
+
+    private String formatDate(long timestamp) {
+        if (timestamp == 0) return "Дата не выбрана";
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+        return sdf.format(new Date(timestamp));
+    }
+
+    private void showDatePicker(boolean isStartDate) {
+        Calendar calendar = Calendar.getInstance();
+
+        DatePickerDialog datePicker = new DatePickerDialog(
+                this,
+                (view, year, month, day) -> {
+                    Calendar selected = Calendar.getInstance();
+                    selected.set(year, month, day);
+
+                    if (isStartDate) {
+                        startDate = selected.getTimeInMillis();
+                        startDateText.setText(formatDate(startDate));
+
+                        // Если уже выбрана дата окончания, пересчитываем продолжительность
+                        if (endDate > 0) {
+                            calculateDuration();
+                        }
+                    } else {
+                        // Проверяем, что дата окончания позже даты начала
+                        if (startDate > 0 && selected.getTimeInMillis() <= startDate) {
+                            Toast.makeText(this, "Дата окончания должна быть позже даты начала",
+                                    Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        endDate = selected.getTimeInMillis();
+                        endDateText.setText(formatDate(endDate));
+
+                        // Пересчитываем продолжительность
+                        if (startDate > 0) {
+                            calculateDuration();
+                        }
+                    }
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        datePicker.show();
+    }
+
+    private void calculateDuration() {
+        if (startDate > 0 && endDate > 0) {
+            long diff = endDate - startDate;
+            duration = (int) (diff / (1000 * 60 * 60 * 24)) + 1; // +1 чтобы включить и начальный день
+            Toast.makeText(this, "Продолжительность: " + duration + " дней",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void loadTourData() {
@@ -65,11 +142,21 @@ public class AddEditTourActivity extends AppCompatActivity {
                                 totalPlacesInput.setText(String.valueOf(tour.getTotalPlaces()));
                                 priceInput.setText(String.valueOf(tour.getPrice()));
                                 imageUrlInput.setText(tour.getImageUrl());
+
+                                // ЗАГРУЗКА ДАТ:
+                                if (tour.getStartDate() > 0) {
+                                    startDate = tour.getStartDate();
+                                    startDateText.setText(formatDate(startDate));
+                                }
+                                if (tour.getEndDate() > 0) {
+                                    endDate = tour.getEndDate();
+                                    endDateText.setText(formatDate(endDate));
+                                }
+                                if (tour.getDuration() > 0) {
+                                    duration = tour.getDuration();
+                                }
                             }
                         }
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(this, "Ошибка загрузки тура", Toast.LENGTH_SHORT).show();
                     });
         }
     }
@@ -124,21 +211,19 @@ public class AddEditTourActivity extends AppCompatActivity {
         tour.put("fromCountry", fromCountry);
         tour.put("toCountry", toCountry);
         tour.put("totalPlaces", totalPlaces);
-
-        // Если редактирование, сохраняем текущие доступные места
-        if (tourId == null) {
-            // Новый тур: все места свободны
-            tour.put("availablePlaces", totalPlaces);
-        } else {
-            // При редактировании сохраняем текущие доступные места
-            // Их нужно будет загрузить отдельно или передать в Intent
-            // Пока что установим равными totalPlaces (нужно улучшить)
-            tour.put("availablePlaces", totalPlaces);
-        }
-
+        tour.put("availablePlaces", totalPlaces);
         tour.put("price", price);
         tour.put("imageUrl", imageUrl.isEmpty() ? "" : imageUrl);
         tour.put("active", true);
+        tour.put("startDate", startDate);
+        tour.put("endDate", endDate);
+        tour.put("duration", duration);
+
+        if (tourId == null) {
+            tour.put("availablePlaces", totalPlaces);
+        } else {
+            tour.put("availablePlaces", totalPlaces);
+        }
 
         if (tourId == null) {
             // Добавление нового тура
@@ -164,5 +249,20 @@ public class AddEditTourActivity extends AppCompatActivity {
                         Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
         }
+        // ВАЛИДАЦИЯ ДАТ:
+        if (startDate == 0 || endDate == 0) {
+            Toast.makeText(this, "Выберите даты начала и окончания тура",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (endDate <= startDate) {
+            Toast.makeText(this, "Дата окончания должна быть позже даты начала",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Пересчитываем продолжительность перед сохранением
+        calculateDuration();
     }
 }

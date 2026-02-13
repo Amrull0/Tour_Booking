@@ -30,6 +30,6 @@
     <item
         android:id="@+id/nav_admin_bookings"
         android:icon="@drawable/ic_confrim"
-        android:title="Подтверждение" />
+        android:title="Отмена бронирований " />
 
 </menu>

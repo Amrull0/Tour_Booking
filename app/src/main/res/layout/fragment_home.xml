@@ -19,13 +19,6 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <Spinner
-            android:id="@+id/filter_country_spinner"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp" />
-
-        <Spinner
             android:id="@+id/filter_sort_spinner"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

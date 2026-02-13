@@ -35,13 +35,7 @@ public class HomeFragment extends Fragment {
     private TourAdapter tourAdapter;
     private List<Tour> tourList;
     private FirebaseFirestore db;
-
-    // Элементы фильтрации
-    private Spinner filterCountrySpinner;
     private Spinner filterSortSpinner;
-
-    // Параметры фильтрации
-    private String selectedCountry = "";
     private String selectedSort = "По умолчанию";
 
     public HomeFragment() {
@@ -66,26 +60,19 @@ public class HomeFragment extends Fragment {
         progressBar = view.findViewById(R.id.progress_bar);
         emptyText = view.findViewById(R.id.empty_text);
 
-        // Инициализация элементов фильтрации
-        filterCountrySpinner = view.findViewById(R.id.filter_country_spinner);
+        // ТОЛЬКО сортировка, без фильтра по странам
         filterSortSpinner = view.findViewById(R.id.filter_sort_spinner);
 
         tourList = new ArrayList<>();
+        db = FirebaseFirestore.getInstance();
 
-        // Настройка RecyclerView
+        // ВЫЗОВ МЕТОДА setupRecyclerView() ← ДОБАВЬ ЭТУ СТРОЧКУ
         setupRecyclerView();
 
-        // Инициализация Firebase
-        db = FirebaseFirestore.getInstance();
-        Log.d("DEBUG", "Firebase инициализирован");
-
-        // Загрузка данных о странах для фильтра
-        loadCountriesForFilter();
-
-        // Настройка спиннера сортировки
+        // Настройка сортировки
         setupSortSpinner();
 
-
+        // Загружаем туры
         loadTours();
     }
 
@@ -160,114 +147,39 @@ public class HomeFragment extends Fragment {
                 });
                 break;
         }
-
-        tourAdapter.notifyDataSetChanged();
-        Toast.makeText(getContext(), "Сортировка: " + selectedSort, Toast.LENGTH_SHORT).show();
-    }
-
-
-    private void loadCountriesForFilter() {
-        db.collection("tours")
-                .whereEqualTo("active", true)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Set<String> countries = new HashSet<>();
-                        countries.add("Все направления"); // Это будет первым элементом
-
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            String country = document.getString("toCountry");
-                            if (country == null || country.isEmpty()) {
-                                country = document.getString("country");
-                            }
-                            if (country != null && !country.isEmpty()) {
-                                countries.add(country);
-                            }
-                        }
-
-                        List<String> countryList = new ArrayList<>(countries);
-                        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                                getContext(),
-                                android.R.layout.simple_spinner_item,
-                                countryList
-                        );
-                        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                        filterCountrySpinner.setAdapter(adapter);
-
-                        // УСТАНАВЛИВАЕМ "Все направления" ПО УМОЛЧАНИЮ
-                        // "Все направления" всегда будет на позиции 0, так как мы добавили его первым
-                        filterCountrySpinner.setSelection(0);
-
-                        // Сохраняем текущий выбор
-                        selectedCountry = ""; // Пустая строка означает "Все направления"
-
-                        Log.d("FILTER", "Установлен фильтр по умолчанию: Все направления");
-
-                        // Автоматическое применение фильтра при выборе страны
-                        filterCountrySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                            @Override
-                            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                String newCountry = parent.getItemAtPosition(position).toString();
-                                String actualCountry = newCountry.equals("Все направления") ? "" : newCountry;
-                                if (!selectedCountry.equals(actualCountry)) {
-                                    selectedCountry = actualCountry;
-                                    Log.d("FILTER", "Выбран фильтр: " + (actualCountry.isEmpty() ? "Все направления" : actualCountry));
-                                    loadTours(); // Загружаем с новым фильтром
-                                }
-                            }
-
-                            @Override
-                            public void onNothingSelected(AdapterView<?> parent) {
-                                // Ничего не делаем
-                            }
-                        });
-
-                        // Если адаптер уже установлен, загружаем туры с фильтром "Все направления"
-                        if (db != null) {
-                            loadTours();
-                        }
-                    } else {
-                        // Если не удалось загрузить страны, все равно устанавливаем "Все направления"
-                        List<String> defaultList = new ArrayList<>();
-                        defaultList.add("Все направления");
-                        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                                getContext(),
-                                android.R.layout.simple_spinner_item,
-                                defaultList
-                        );
-                        filterCountrySpinner.setAdapter(adapter);
-                        filterCountrySpinner.setSelection(0);
-                        selectedCountry = "";
-
-                        // Загружаем туры
-                        if (db != null) {
-                            loadTours();
-                        }
-                    }
-                });
     }
 
     private void loadTours() {
-        Log.d("FILTER", "Загрузка туров с фильтром: страна=" + (selectedCountry.isEmpty() ? "Все" : selectedCountry));
         progressBar.setVisibility(View.VISIBLE);
         emptyText.setVisibility(View.GONE);
         recyclerView.setVisibility(View.GONE);
 
-        // Базовый запрос
-        if (selectedCountry != null && !selectedCountry.isEmpty()) {
-            // Фильтр по стране
-            db.collection("tours")
-                    .whereEqualTo("active", true)
-                    .whereEqualTo("toCountry", selectedCountry)
-                    .get()
-                    .addOnCompleteListener(this::processQueryResult);
-        } else {
-            // Без фильтра по стране
-            db.collection("tours")
-                    .whereEqualTo("active", true)
-                    .get()
-                    .addOnCompleteListener(this::processQueryResult);
-        }
+        // ПРОСТОЙ ЗАПРОС без фильтрации по стране
+        db.collection("tours")
+                .whereEqualTo("active", true)
+                .get()
+                .addOnCompleteListener(task -> {
+                    progressBar.setVisibility(View.GONE);
+
+                    if (task.isSuccessful()) {
+                        tourList.clear();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            Tour tour = document.toObject(Tour.class);
+                            tour.setId(document.getId());
+                            tourList.add(tour);
+                        }
+
+                        // Применяем сортировку по умолчанию
+                        applyLocalSorting();
+
+                        if (tourList.isEmpty()) {
+                            emptyText.setVisibility(View.VISIBLE);
+                        } else {
+                            emptyText.setVisibility(View.GONE);
+                            recyclerView.setVisibility(View.VISIBLE);
+                        }
+                    }
+                });
     }
 
     private void processQueryResult(com.google.android.gms.tasks.Task<com.google.firebase.firestore.QuerySnapshot> task) {
@@ -348,9 +260,6 @@ public class HomeFragment extends Fragment {
             if (tourList.isEmpty()) {
                 emptyText.setVisibility(View.VISIBLE);
                 recyclerView.setVisibility(View.GONE);
-                Toast.makeText(getContext(),
-                        selectedCountry.isEmpty() ? "Нет доступных туров" : "Нет туров в выбранном направлении",
-                        Toast.LENGTH_SHORT).show();
             } else {
                 emptyText.setVisibility(View.GONE);
                 recyclerView.setVisibility(View.VISIBLE);

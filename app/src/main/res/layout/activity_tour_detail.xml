@@ -100,6 +100,46 @@
                 android:maxLines="1" />
 
         </LinearLayout>
+        <!-- Даты тура -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Даты тура:"
+                android:textSize="16sp"
+                android:layout_marginRight="8dp" />
+
+            <TextView
+                android:id="@+id/tour_dates"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="01.01.2024 - 10.01.2024"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+             <Button
+                android:id="@+id/select_dates_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Выбрать даты поездки"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="@android:color/holo_blue_dark"
+                android:textColor="@android:color/white" />
+
+        <!-- Продолжительность -->
+        <TextView
+            android:id="@+id/tour_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Продолжительность: 10 дней"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp" />
 
         <!-- Кнопка бронирования -->
         <Button

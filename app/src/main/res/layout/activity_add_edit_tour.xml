@@ -98,6 +98,51 @@
             android:inputType="number"
             android:maxLines="1"
             android:layout_marginBottom="16dp" />
+        <!-- Дата -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Дата начала*"
+            android:textSize="16sp"
+            android:layout_marginBottom="4dp" />
+
+        <Button
+            android:id="@+id/select_start_date_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Выбрать дату начала"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/start_date_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Дата не выбрана"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Дата окончания -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Дата окончания*"
+            android:textSize="16sp"
+            android:layout_marginBottom="4dp" />
+
+        <Button
+            android:id="@+id/select_end_date_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Выбрать дату окончания"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/end_date_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Дата не выбрана"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginBottom="16dp" />
 
         <!-- Цена -->
         <TextView

@@ -1,6 +1,7 @@
 package com.example.tourbooking;
 
-import android.content.Intent;
+
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,6 +17,9 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -29,6 +33,10 @@ public class TourDetailActivity extends AppCompatActivity {
     private ImageView tourImage;
     private TextView tourTitle, tourRoute, tourPrice, tourDescription, tourPlaces;
     private Button bookButton, backButton;
+    private TextView tourDates, tourDuration;
+    private Button selectDatesButton;
+    private long selectedStartDate = 0;
+    private long selectedEndDate = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,9 +65,17 @@ public class TourDetailActivity extends AppCompatActivity {
         bookButton = findViewById(R.id.book_button);
         backButton = findViewById(R.id.back_button);
         participantsInput = findViewById(R.id.participants_input);
+        tourDates = findViewById(R.id.tour_dates);
+        tourDuration = findViewById(R.id.tour_duration);
+        selectDatesButton = findViewById(R.id.select_dates_button);
 
         // Заполняем данные
         displayTourData();
+
+        displayTourDates();
+
+        selectDatesButton.setOnClickListener(v -> showDatePickerDialog());
+
 
         // Кнопка бронирования
         bookButton.setOnClickListener(v -> {
@@ -80,7 +96,136 @@ public class TourDetailActivity extends AppCompatActivity {
         // Кнопка назад
         backButton.setOnClickListener(v -> finish());
     }
+    private void displayTourDates() {
+        if (tour != null) {
+            // Даты самого тура
+            if (tour.getStartDate() > 0 && tour.getEndDate() > 0) {
+                tourDates.setText(tour.getFormattedDateRange());
+            } else {
+                tourDates.setText("Даты не указаны");
+            }
 
+            // Продолжительность
+            if (tour.getDuration() > 0) {
+                tourDuration.setText("Продолжительность: " + tour.getDuration() + " дней");
+            }
+        }
+    }
+
+    private void showDatePickerDialog() {
+        // Получаем даты тура из базы
+        long tourStartDate = tour.getStartDate();  // Дата начала тура (админская)
+        long tourEndDate = tour.getEndDate();      // Дата окончания тура (админская)
+
+        Calendar calendar = Calendar.getInstance();
+
+        // Если у тура есть даты, используем их как ограничения
+        Calendar minDate = Calendar.getInstance();
+        Calendar maxDate = Calendar.getInstance();
+
+        if (tourStartDate > 0 && tourEndDate > 0) {
+            // Устанавливаем ограничения по датам тура
+            minDate.setTimeInMillis(tourStartDate);
+            maxDate.setTimeInMillis(tourEndDate);
+        } else {
+            // Если дат нет, используем текущий год
+            minDate.add(Calendar.DAY_OF_MONTH, 1); // Завтра
+            maxDate.add(Calendar.DAY_OF_MONTH, 365); // Через год
+        }
+
+        DatePickerDialog startDatePicker = new DatePickerDialog(
+                this,
+                (view, selectedYear, selectedMonth, selectedDay) -> {
+                    Calendar startCal = Calendar.getInstance();
+                    startCal.set(selectedYear, selectedMonth, selectedDay);
+
+                    // ПРОВЕРКА: не раньше даты начала тура
+                    if (tourStartDate > 0 && startCal.getTimeInMillis() < tourStartDate) {
+                        Toast.makeText(this, "Нельзя выбрать дату раньше " + formatDate(tourStartDate),
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // ПРОВЕРКА: не позже даты окончания тура
+                    if (tourEndDate > 0 && startCal.getTimeInMillis() > tourEndDate) {
+                        Toast.makeText(this, "Нельзя выбрать дату позже " + formatDate(tourEndDate),
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    selectedStartDate = startCal.getTimeInMillis();
+                    showEndDatePickerDialog(startCal, tourStartDate, tourEndDate);
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        // Устанавливаем ограничения для DatePicker
+        if (tourStartDate > 0) {
+            startDatePicker.getDatePicker().setMinDate(tourStartDate);
+        }
+        if (tourEndDate > 0) {
+            startDatePicker.getDatePicker().setMaxDate(tourEndDate);
+        }
+
+        startDatePicker.show();
+    }
+
+    private void showEndDatePickerDialog(Calendar startDate, long tourStartDate, long tourEndDate) {
+        Calendar minDate = (Calendar) startDate.clone();
+        minDate.add(Calendar.DAY_OF_MONTH, 1); // Минимум 1 день после начала
+
+        DatePickerDialog endDatePicker = new DatePickerDialog(
+                this,
+                (view, selectedYear, selectedMonth, selectedDay) -> {
+                    Calendar endCal = Calendar.getInstance();
+                    endCal.set(selectedYear, selectedMonth, selectedDay);
+
+                    // ПРОВЕРКА: не позже даты окончания тура
+                    if (tourEndDate > 0 && endCal.getTimeInMillis() > tourEndDate) {
+                        Toast.makeText(this, "Нельзя выбрать дату позже " + formatDate(tourEndDate),
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    selectedEndDate = endCal.getTimeInMillis();
+
+                    // Показываем выбранные даты
+                    String dateRange = formatDate(selectedStartDate) + " - " + formatDate(selectedEndDate);
+                    tourDates.setText("Вы выбрали: " + dateRange);
+
+                    // Рассчитываем продолжительность
+                    long diff = selectedEndDate - selectedStartDate;
+                    int days = (int) (diff / (1000 * 60 * 60 * 24)) + 1;
+                    tourDuration.setText("Продолжительность: " + days + " дней");
+
+                    Toast.makeText(this, "Выбраны даты: " + dateRange, Toast.LENGTH_SHORT).show();
+                },
+                startDate.get(Calendar.YEAR),
+                startDate.get(Calendar.MONTH),
+                startDate.get(Calendar.DAY_OF_MONTH)
+        );
+
+        // Устанавливаем ограничения
+        endDatePicker.getDatePicker().setMinDate(minDate.getTimeInMillis());
+
+        if (tourEndDate > 0) {
+            endDatePicker.getDatePicker().setMaxDate(tourEndDate);
+        } else {
+            Calendar maxDate = (Calendar) startDate.clone();
+            maxDate.add(Calendar.DAY_OF_MONTH, 60); // Максимум 60 дней
+            endDatePicker.getDatePicker().setMaxDate(maxDate.getTimeInMillis());
+        }
+
+        endDatePicker.show();
+    }
+
+    // Метод форматирования даты (добавь если нет)
+    private String formatDate(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+        return sdf.format(new Date(timestamp));
+    }
     private void displayTourData() {
         // Название
         tourTitle.setText(tour.getTitle() != null ? tour.getTitle() : "Без названия");
@@ -189,6 +334,11 @@ public class TourDetailActivity extends AppCompatActivity {
             return;
         }
 
+        if (selectedStartDate == 0 || selectedEndDate == 0) {
+            Toast.makeText(this, "Выберите даты поездки", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String userId = mAuth.getCurrentUser().getUid();
 
         // Рассчитываем общую стоимость
@@ -199,6 +349,11 @@ public class TourDetailActivity extends AppCompatActivity {
         booking.put("userId", userId);
         booking.put("tourId", tour.getId());
         booking.put("tourTitle", tour.getTitle());
+        booking.put("tourRoute", tour.getFromCountry() + " → " + tour.getToCountry());
+        booking.put("participants", participants);
+        booking.put("status", "confirmed");
+        booking.put("totalPrice", totalPrice);
+        booking.put("createdAt", System.currentTimeMillis());
 
         // Формируем маршрут для бронирования
         String route = "";
@@ -213,6 +368,9 @@ public class TourDetailActivity extends AppCompatActivity {
         booking.put("status", "confirmed"); // СРАЗУ подтверждено
         booking.put("totalPrice", totalPrice);
         booking.put("createdAt", System.currentTimeMillis());
+        booking.put("selectedStartDate", selectedStartDate);
+        booking.put("selectedEndDate", selectedEndDate);
+        booking.put("selectedDuration", (int) ((selectedEndDate - selectedStartDate) / (1000 * 60 * 60 * 24)) + 1);
 
         // Сначала уменьшаем количество доступных мест в туре
         db.collection("tours")

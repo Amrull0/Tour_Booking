@@ -1,6 +1,9 @@
 package com.example.tourbooking;
 
+import java.util.Date;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 public class Tour implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -10,6 +13,9 @@ public class Tour implements Serializable {
     private String description;
     private String fromCountry;    // ОТКУДА
     private String toCountry;      // КУДА
+    private long startDate; // Дата начала тура
+    private long endDate;   // Дата окончания тура
+    private int duration;   // Продолжительность в днях
     private double price;
     private String imageUrl;
     private boolean active;
@@ -45,8 +51,14 @@ public class Tour implements Serializable {
 
     public String getToCountry() { return toCountry; }
     public void setToCountry(String toCountry) { this.toCountry = toCountry; }
+    public long getStartDate() { return startDate; }
+    public void setStartDate(long startDate) { this.startDate = startDate; }
 
-    // Для обратной совместимости с полем "country" в БД
+    public long getEndDate() { return endDate; }
+    public void setEndDate(long endDate) { this.endDate = endDate; }
+
+    public int getDuration() { return duration; }
+    public void setDuration(int duration) { this.duration = duration; }
     public String getCountry() { return toCountry; }
     public void setCountry(String country) { this.toCountry = country; }
 
@@ -83,5 +95,13 @@ public class Tour implements Serializable {
         if (availablePlaces > totalPlaces) {
             availablePlaces = totalPlaces;
         }
+    }
+
+    // Метод для форматирования даты
+    public String getFormattedDateRange() {
+        if (startDate == 0 || endDate == 0) return "Дата не указана";
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+        return sdf.format(new Date(startDate)) + " - " + sdf.format(new Date(endDate));
     }
 }

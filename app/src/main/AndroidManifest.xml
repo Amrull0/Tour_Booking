@@ -18,7 +18,8 @@
             android:exported="false" />
         <activity
             android:name=".TourDetailActivity"
-            android:exported="false" /> <!-- Точка входа - AuthActivity -->
+            android:exported="false" />
+        <!-- Точка входа - AuthActivity -->
         <activity
             android:name=".AuthActivity"
             android:exported="true"
